@@ -1,0 +1,109 @@
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+import os
+
+# Spotify API credentials
+SPOTIPY_CLIENT_ID = "eb8d40c094d041b8862e3ec6b8e532c3"
+SPOTIPY_CLIENT_SECRET = "5cfcc96a02854b9e9712a829203ffa5b"
+SPOTIPY_REDIRECT_URI = "http://localhost:8888/callback"
+SPOTIPY_SCOPE = "playlist-modify-public"
+cache_path="/.cache"
+
+# Initialize Spotify API client
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
+                                               client_secret=SPOTIPY_CLIENT_SECRET,
+                                               redirect_uri=SPOTIPY_REDIRECT_URI,
+                                               scope=SPOTIPY_SCOPE))
+
+# Playlist ID (your target playlist)
+playlist_id = "2GQe5vC6hSeMRaszoVmelZ"
+song_uris = [
+    "spotify:track:1jlCTXvGEQpPuumICdSKzw",
+    "spotify:track:6mDxu0xwhv5tn1oMTNUypu",
+    "spotify:track:4W37fDymJzsqaarlKKEvcM",
+    "spotify:track:5d22scOOfbrK7GHy3ZTT3s",
+    "spotify:track:3qBvrLYZJyo5MT56Jg6YAX",
+    "spotify:track:0bwqYEsXNrCySWQ3UCy3ws",
+    "spotify:track:3M6YfoPwvvTHK1mnCQmqHI",
+    "spotify:track:19t9aYKrslxEtcFyQ4IkMT",
+    "spotify:track:6ZP66zQZjwN1P0QWR9fdSP",
+    "spotify:track:2Qw6jgFXAmCBjTgpu18Nv2",
+    "spotify:track:1SH0BnKkEtLh8IcZnci79y",
+    "spotify:track:1O6e8ewSwx8ijeMoVUrW5I",
+    "spotify:track:4vePE79zJShD1QIedYcEgn",
+    "spotify:track:5klrh466oGToybceGHPGAX",
+    "spotify:track:4y22ikbRHTRRkZCKsLOGe3",
+    "spotify:track:4w0B2qq8asWtatQ4z6ezid",
+    "spotify:track:35yv66uP9q34KpJ4eix9E3",
+    "spotify:track:6bcCrByBZgx8FYwuKE4Jgu",
+    "spotify:track:4a4nAiIKUPxCZXh5q9U2OC",
+    "spotify:track:6CxNCBE7RY7UGwNTI2dGgA",
+    "spotify:track:1jV7MxxQ5Mk45hmBQrAQn5",
+    "spotify:track:1Ea0zWC9cjfsF70fvZ3qva",
+    "spotify:track:2rJFFUEl1LURkV0b0OARXx",
+    "spotify:track:69H36YTMZa1KiB43ELJTVA",
+    "spotify:track:5WKxcFnCO244tMnVElhFuk",
+]
+
+# File to store the index of the next song to add
+INDEX_FILE = 'song_index.txt'
+
+# Function to get the current song index
+def get_current_index():
+    if os.path.exists(INDEX_FILE):
+        with open(INDEX_FILE, 'r') as f:
+            index = int(f.read().strip())
+    else:
+        # If the index file doesn't exist, start at the first song
+        index = 0
+    return index
+
+# Function to save the next song index
+def save_next_index(index):
+    with open(INDEX_FILE, 'w') as f:
+        f.write(str(index))
+
+# Main function to add a song to the playlist
+def add_song_to_playlist():
+    print(f"STARTED")
+    current_index = get_current_index()
+
+    auth_manager = SpotifyOAuth(
+        client_id=SPOTIPY_CLIENT_ID,
+        client_secret=SPOTIPY_CLIENT_SECRET,
+        redirect_uri=SPOTIPY_REDIRECT_URI,
+        scope="playlist-modify-public",
+    )
+
+    print("Visit the following URL to authorize the application:")
+    print(auth_manager.get_authorize_url())
+
+    current_user = sp.current_user()
+    print(f"Already authorized as: {current_user['display_name']}")
+
+    if current_index < len(song_uris):
+        print(f"HELLO: {current_index}")
+        # Add the song to the playlist
+
+        # Get the authenticated user's playlists
+        playlists = sp.current_user_playlists()
+
+        # Print playlist names and IDs
+        for playlist in playlists['items']:
+            print(f"Playlist name: {playlist['name']}, Playlist ID: {playlist['id']}")
+
+        try:
+            sp.playlist_add_items(playlist_id, [song_uris[current_index]])
+            print(f"Added song {song_uris[current_index]} to the playlist.")
+        except Exception as e:
+            print(f"Error adding song: {e}")
+
+
+        # Update the index to the next song
+        save_next_index(current_index + 1)
+    else:
+        print("No more songs to add.")
+
+# Run the function to add a song
+add_song_to_playlist()
+
